@@ -217,57 +217,6 @@ app.get("/reset", (req, res) => {
         users: [
           {
             id: 1,
-            name: "Dzakki",
-            isTeacher: false,
-            join: false,
-            turn: true,
-          },
-          {
-            id: 2,
-            name: "Myra",
-            isTeacher: false,
-            join: false,
-            turn: false,
-          },
-          {
-            id: 3,
-            name: "Paolo",
-            isTeacher: false,
-            join: false,
-            turn: false,
-          },
-          {
-            id: 4,
-            name: "Anh",
-            isTeacher: false,
-            join: false,
-            turn: false,
-          },
-          // {
-          //   id: 5,
-          //   name: "Julen",
-          //   isTeacher: true,
-          //   join: false,
-          //   turn: false
-          // },
-        ],
-        classroom_id: 1,
-        score: 0,
-        answered: 0,
-        sheets: [],
-        created_at: "2020-06-27T11:50:20.840Z",
-        updated_at: "2020-06-27T11:50:20.840Z",
-      },
-      {
-        id: 2,
-        name: "Group 2",
-        video_call_code: "abc",
-        turn_time: 60 * 5,
-        session_time: 60 * 15,
-        status: "onprogress",
-        users: [
-          {
-            id: 1,
             name: "Julen",
             isTeacher: false,
             join: false,
@@ -295,6 +244,36 @@ app.get("/reset", (req, res) => {
         created_at: "2020-06-27T11:50:20.840Z",
         updated_at: "2020-06-27T11:50:20.840Z",
       },
+      {
+        id: 2,
+        name: "Group 2",
+        video_call_code: "abc",
+        turn_time: 60 * 5,
+        session_time: 60 * 15,
+        status: "onprogress",
+        users: [
+          {
+            id: 1,
+            name: "Ann",
+            isTeacher: false,
+            join: false,
+            turn: true,
+          },
+          {
+            id: 2,
+            name: "Dzakki",
+            isTeacher: false,
+            join: false,
+            turn: false,
+          },
+        ],
+        classroom_id: 1,
+        score: 0,
+        answered: 0,
+        sheets: [],
+        created_at: "2020-06-27T11:50:20.840Z",
+        updated_at: "2020-06-27T11:50:20.840Z",
+      },
     ],
   };
   res.json(db);
@@ -305,4 +284,3 @@ const PORT = process.env.PORT || 3001;
 http.listen(PORT, () => {
   console.log("listening on *:", process.env.PORT || 3001);
 });
-
