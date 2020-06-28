@@ -18,7 +18,7 @@ let db = {
       users: [
         {
           id: 1,
-          name: "Dzakki",
+          name: "Julen",
           isTeacher: false,
           join: false,
           turn: true,
@@ -37,20 +37,6 @@ let db = {
           join: false,
           turn: false,
         },
-        {
-          id: 4,
-          name: "Anh",
-          isTeacher: false,
-          join: false,
-          turn: false,
-        },
-        // {
-        //   id: 5,
-        //   name: "Julen",
-        //   isTeacher: true,
-        //   join: false,
-        //   turn: false
-        // },
       ],
       classroom_id: 1,
       score: 0,
@@ -69,21 +55,14 @@ let db = {
       users: [
         {
           id: 1,
-          name: "Julen",
+          name: "Ann",
           isTeacher: false,
           join: false,
           turn: true,
         },
         {
           id: 2,
-          name: "Myra",
-          isTeacher: false,
-          join: false,
-          turn: false,
-        },
-        {
-          id: 3,
-          name: "Paolo",
+          name: "Dzakki",
           isTeacher: false,
           join: false,
           turn: false,
@@ -326,3 +305,4 @@ const PORT = process.env.PORT || 3001;
 http.listen(PORT, () => {
   console.log("listening on *:", process.env.PORT || 3001);
 });
+
