@@ -18,7 +18,7 @@ let db = {
       users: [
         {
           id: 1,
-          name: "Julen",
+          name: "Julien",
           isTeacher: false,
           join: false,
           turn: true,
@@ -217,7 +217,7 @@ app.get("/reset", (req, res) => {
         users: [
           {
             id: 1,
-            name: "Julen",
+            name: "Julien",
             isTeacher: false,
             join: false,
             turn: true,
