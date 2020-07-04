@@ -34,9 +34,9 @@ module.exports = {
 
     // res.header("Access-Control-Allow-Origin", "*");
     //res.header("Access-Control-Allow-Origin", "http://ip:port")
-    return res.json({ key: key }).send();
+    return res.json({ key: key });
   },
-  generateRtmToken() {
+  generateRtmToken(req, res) {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
     const account = req.query.account;
@@ -54,6 +54,6 @@ module.exports = {
 
     // res.header("Access-Control-Allow-Origin", "*");
     //res.header("Access-Control-Allow-Origin", "http://ip:port")
-    return res.json({ key: key }).send();
+    return res.json({ key: key });
   },
 };

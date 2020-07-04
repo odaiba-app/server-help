@@ -24,7 +24,7 @@ let db = {
     {
       id: 1,
       name: "Group 1",
-      video_call_code: "abc",
+      video_call_code: "Group1",
       turn_time: 60 * 5,
       session_time: 60 * 15,
       status: "onprogress",
@@ -39,7 +39,7 @@ let db = {
     {
       id: 2,
       name: "Group 2",
-      video_call_code: "abc",
+      video_call_code: "Group2",
       turn_time: 60 * 5,
       session_time: 60 * 15,
       status: "onprogress",
