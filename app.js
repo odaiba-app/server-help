@@ -1,10 +1,20 @@
-const app = require("express")();
+if (process.env.NODE_ENV == "development") {
+  require("dotenv").config();
+}
+
+const express = require("express");
+const app = express();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
+const cors = require("cors");
+const router = require("./routes");
+const PORT = process.env.PORT || 3001;
 
-app.get("/", (req, res) => {
-  res.send("hello there");
-});
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use("/", router);
 
 const users = require("./userDummies");
 const sheets = require("./sheetDummies");
@@ -202,8 +212,6 @@ app.get("/reset", (req, res) => {
   io.emit("reset", db.groups);
   res.json(db);
 });
-
-const PORT = process.env.PORT || 3001;
 
 http.listen(PORT, () => {
   console.log("listening on *:", process.env.PORT || 3001);
