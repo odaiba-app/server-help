@@ -32,7 +32,7 @@ let db = {
       classroom_id: 1,
       score: 0,
       answered: 0,
-      sheets: sheets,
+      sheets: sheets[0],
       created_at: "2020-06-27T11:50:20.840Z",
       updated_at: "2020-06-27T11:50:20.840Z",
     },
@@ -47,7 +47,7 @@ let db = {
       classroom_id: 1,
       score: 0,
       answered: 0,
-      sheets: sheets,
+      sheets: sheets[1],
       created_at: "2020-06-27T11:50:20.840Z",
       updated_at: "2020-06-27T11:50:20.840Z",
     },
@@ -56,6 +56,11 @@ let db = {
 
 io.on("connection", (socket) => {
   console.log("a user connected");
+
+  socket.on("joinRoom", function(room) {
+    socket.join(room);
+  });
+
   socket.on("getGroups", function(to) {
     realtimeGroup();
     console.log("masuk g?");
@@ -84,12 +89,12 @@ io.on("connection", (socket) => {
   socket.on("updateSheet", function(response) {
     const { sheets, groupid } = response;
     const indexGroup = db.groups.findIndex(function(r) {
-      return r.id === Number(groupid);
+      return r.id === Number(response.groupid);
     });
     console.log(indexGroup, "indexGroup");
-    db.groups[indexGroup].sheets = sheets;
+    db.groups[indexGroup].sheets = response.sheets;
     // console.log(db.groups[indexGroup].sheets)
-    if (sheets.length) {
+    if (response.sheets.length) {
       realtimeGroup();
     }
     console.log(db.groups[0].answered);
@@ -98,7 +103,7 @@ io.on("connection", (socket) => {
   });
   socket.on("answerQ", function(response) {
     console.log(response);
-    socket.broadcast.emit("answerQ", response);
+    socket.broadcast.to(response.room).emit("answerQ", response);
     realtimeGroup();
     io.emit("realtime-groups", db.groups);
   });
@@ -180,7 +185,7 @@ app.get("/reset", (req, res) => {
       {
         id: 1,
         name: "Group 1",
-        video_call_code: "abc",
+        video_call_code: "Group1",
         turn_time: 60 * 5,
         session_time: 60 * 15,
         status: "onprogress",
@@ -195,7 +200,7 @@ app.get("/reset", (req, res) => {
       {
         id: 2,
         name: "Group 2",
-        video_call_code: "abc",
+        video_call_code: "Group2",
         turn_time: 60 * 5,
         session_time: 60 * 15,
         status: "onprogress",
