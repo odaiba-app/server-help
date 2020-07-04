@@ -1,112 +1,82 @@
-const app = require("express")();
+if (process.env.NODE_ENV == "development") {
+  require("dotenv").config();
+}
+
+const express = require("express");
+const app = express();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
+const cors = require("cors");
+const router = require("./routes");
+const PORT = process.env.PORT || 3001;
 
-app.get("/", (req, res) => {
-  res.send("hello there");
-});
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use("/", router);
+
+const users = require("./userDummies");
+const sheets = require("./sheetDummies");
 
 let db = {
   groups: [
     {
       id: 1,
       name: "Group 1",
-      video_call_code: "abc",
+      video_call_code: "Group1",
       turn_time: 60 * 5,
       session_time: 60 * 15,
       status: "onprogress",
-      users: [
-        {
-          id: 1,
-          name: "Julien",
-          isTeacher: false,
-          join: false,
-          turn: true,
-        },
-        {
-          id: 2,
-          name: "Myra",
-          isTeacher: false,
-          join: false,
-          turn: false,
-        },
-        {
-          id: 3,
-          name: "Paolo",
-          isTeacher: false,
-          join: false,
-          turn: false,
-        },
-      ],
+      users: users[0],
       classroom_id: 1,
       score: 0,
       answered: 0,
-      sheets: [],
+      sheets: sheets,
       created_at: "2020-06-27T11:50:20.840Z",
       updated_at: "2020-06-27T11:50:20.840Z",
     },
     {
       id: 2,
       name: "Group 2",
-      video_call_code: "abc",
+      video_call_code: "Group2",
       turn_time: 60 * 5,
       session_time: 60 * 15,
       status: "onprogress",
-      users: [
-        {
-          id: 1,
-          name: "Ann",
-          isTeacher: false,
-          join: false,
-          turn: true,
-        },
-        {
-          id: 2,
-          name: "Dzakki",
-          isTeacher: false,
-          join: false,
-          turn: false,
-        },
-      ],
+      users: users[1],
       classroom_id: 1,
       score: 0,
       answered: 0,
-      sheets: [],
+      sheets: sheets,
       created_at: "2020-06-27T11:50:20.840Z",
       updated_at: "2020-06-27T11:50:20.840Z",
     },
   ],
 };
-/*
-{
-  id: 2,
-  name: "Group 2",
-  video_call_code: "abc",
-  users: [
-    {
-      id: 1,
-      name: "",
-      isTeacher: false
-    }
-  ] 
-  classroom_id: 1,
-  created_at: "2020-06-27T11:50:20.840Z",
-  updated_at: "2020-06-27T11:50:20.840Z",
-}
-*/
 
 io.on("connection", (socket) => {
   console.log("a user connected");
   socket.on("getGroups", function(to) {
-    socket.emit(to, db.groups);
-    // turn_time(60 * 5, 0, () => {
-    //   socket.emit(to);
-    //   socket.emit("realtime-groups");
-    // });
-    // turn_time(60 * 5, 1, () => {
-    //   socket.emit(to);
-    //   socket.emit("realtime-groups");
-    // });
+    realtimeGroup();
+    console.log("masuk g?");
+    // io.emit("realtime-groups", db.groups);
+    io.emit(to, db.groups);
+  });
+
+  // get group by id
+  socket.on("getWorkGroup", function(payload) {
+    /* {
+          id: 1,
+          to: username
+     }*/
+
+    // console.log(payload);
+    const indexGroup = db.groups.findIndex(function(r) {
+      return r.id === Number(payload.id);
+    });
+
+    // console.log(db.groups[0].sheets);
+    io.emit(`getWorkGroup-${payload.to}`, db.groups[indexGroup]);
   });
 
   // socket.on()
@@ -141,12 +111,12 @@ io.on("connection", (socket) => {
 });
 
 function realtimeGroup() {
+  console.log("masuk gg");
   for (let i = 0; i < db.groups.length; i++) {
     db.groups[i].answered;
     let answered = 0;
     let score = 0;
     for (var j = 0; j < db.groups[i].sheets.length; j++) {
-      console.log(db.groups[i].sheets[j].questions[2]);
       if (db.groups[i].sheets[j].questions[2]) {
         answered++;
       }
@@ -214,33 +184,11 @@ app.get("/reset", (req, res) => {
         turn_time: 60 * 5,
         session_time: 60 * 15,
         status: "onprogress",
-        users: [
-          {
-            id: 1,
-            name: "Julien",
-            isTeacher: false,
-            join: false,
-            turn: true,
-          },
-          {
-            id: 2,
-            name: "Myra",
-            isTeacher: false,
-            join: false,
-            turn: false,
-          },
-          {
-            id: 3,
-            name: "Paolo",
-            isTeacher: false,
-            join: false,
-            turn: false,
-          },
-        ],
+        users: users[0],
         classroom_id: 1,
         score: 0,
         answered: 0,
-        sheets: [],
+        sheets: sheets,
         created_at: "2020-06-27T11:50:20.840Z",
         updated_at: "2020-06-27T11:50:20.840Z",
       },
@@ -251,35 +199,19 @@ app.get("/reset", (req, res) => {
         turn_time: 60 * 5,
         session_time: 60 * 15,
         status: "onprogress",
-        users: [
-          {
-            id: 1,
-            name: "Ann",
-            isTeacher: false,
-            join: false,
-            turn: true,
-          },
-          {
-            id: 2,
-            name: "Dzakki",
-            isTeacher: false,
-            join: false,
-            turn: false,
-          },
-        ],
+        users: users[1],
         classroom_id: 1,
         score: 0,
         answered: 0,
-        sheets: [],
+        sheets: sheets,
         created_at: "2020-06-27T11:50:20.840Z",
         updated_at: "2020-06-27T11:50:20.840Z",
       },
     ],
   };
+  io.emit("reset", db.groups);
   res.json(db);
 });
-
-const PORT = process.env.PORT || 3001;
 
 http.listen(PORT, () => {
   console.log("listening on *:", process.env.PORT || 3001);
