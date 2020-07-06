@@ -58,6 +58,10 @@ io.on("connection", (socket) => {
   console.log("a user connected");
 
   socket.on("joinRoom", function(room) {
+    const rooms = Object.keys(socket.rooms);
+    for (let i = 1; i < rooms.length; i++) {
+      socket.leave(rooms[i]);
+    }
     socket.join(room);
   });
 
