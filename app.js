@@ -197,7 +197,7 @@ app.get("/reset", (req, res) => {
         classroom_id: 1,
         score: 0,
         answered: 0,
-        sheets: sheets,
+        sheets: sheets[0],
         created_at: "2020-06-27T11:50:20.840Z",
         updated_at: "2020-06-27T11:50:20.840Z",
       },
@@ -212,13 +212,14 @@ app.get("/reset", (req, res) => {
         classroom_id: 1,
         score: 0,
         answered: 0,
-        sheets: sheets,
+        sheets: sheets[1],
         created_at: "2020-06-27T11:50:20.840Z",
         updated_at: "2020-06-27T11:50:20.840Z",
       },
     ],
   };
   io.emit("reset", db.groups);
+  io.emit("realtime-groups", db.groups)
   res.json(db);
 });
 
