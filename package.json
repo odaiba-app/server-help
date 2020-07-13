@@ -6,11 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
-<<<<<<< HEAD
     "dev": "nodemon app.js"
-=======
-    "dev": "NODE_ENV=development nodemon app.js"
->>>>>>> 2fc88e4de020a65a8ddafd60df0d1bb7e0274dd6
   },
   "keywords": [],
   "author": "",
