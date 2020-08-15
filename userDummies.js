@@ -3,7 +3,6 @@ module.exports = [
     {
       id: 1,
       name: "Julien",
-      email: "Julien@mail.com",
       isTeacher: false,
       join: false,
       turn: true,
@@ -11,7 +10,6 @@ module.exports = [
     {
       id: 2,
       name: "Myra",
-      email: "Myra@mail.com",
       isTeacher: false,
       join: false,
       turn: false,
@@ -19,7 +17,6 @@ module.exports = [
     {
       id: 3,
       name: "Paolo",
-      email: "Paolo@mail.com",
       isTeacher: false,
       join: false,
       turn: false,
@@ -29,7 +26,6 @@ module.exports = [
     {
       id: 1,
       name: "Ann",
-      email: "Ann@mail.com",
       isTeacher: false,
       join: false,
       turn: true,
@@ -37,7 +33,6 @@ module.exports = [
     {
       id: 2,
       name: "Dzakki",
-      email: "dzakki@mail.com",
       isTeacher: false,
       join: false,
       turn: false,
