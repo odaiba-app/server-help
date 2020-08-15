@@ -2,8 +2,8 @@ module.exports = [
   [
     {
       id: 1,
-      name: "Julien",
-      email: "Julien@mail.com",
+      name: "dzakki",
+      email: "dzakki@mail.com",
       isTeacher: false,
       join: false,
       turn: true,
