@@ -31,16 +31,47 @@ io.on('connection', (socket) => {
     }
 
     socket.join(room);
-    io.sockets.in(`workgroup-1`).emit('studentTurnTimer', 'hi');
   });
 
-  socket.on('leftWorkgroup', function (username) {
-    let found = countDowns.filter((c) => {
-      return c.id === user.name;
-    });
+  socket.on('startSessionTimer', function (data) {
+    let {
+      hasStarted,
+      startTime,
+      endTime,
+      turn_time,
+      workgroup,
+      remainingTime,
+    } = data;
+
+    if (remainingTime > 0) {
+      countdown = setInterval(() => {
+        if (!hasStarted) return;
+        const sessionHasEnded = remainingTime <= 0;
+
+        if (sessionHasEnded) {
+          let found = countDowns.filter((c) => {
+            return c.id === workgroup;
+          });
+
+          if (found[0]) {
+            clearInterval(found[0].countdown);
+          }
+        }
+
+        const duration = endTime - Date.now();
+        const seconds = Math.floor((duration % (1000 * 60)) / 1000);
+        const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+
+        io.sockets.in(workgroup).emit('workgroupSessionTimer', {
+          seconds: seconds < 10 ? '0' + seconds : seconds,
+          minutes,
+          duration,
+        });
+      }, 500);
+    }
   });
 
-  socket.on('turnData', function (data) {
+  socket.on('startTurnTimer', function (data) {
     let {
       hasStarted,
       startTime,
@@ -84,11 +115,11 @@ io.on('connection', (socket) => {
 
       if (duration <= 0) {
         turnEndTime = turnEndTime + turn_time;
+
         currentTurnCopy += 1;
 
         studentsCopy = studentsCopy.filter((student, idx) => {
           if (!student.turn && student.user.id !== user.id) {
-            console.log(student, idx);
             if (idx === 1) {
               student.turn = true;
             }
@@ -102,7 +133,7 @@ io.on('connection', (socket) => {
       const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
 
       if (Date.now() < endTime) {
-        const studentTurn = studentsCopy.filter(
+        let studentTurn = studentsCopy.filter(
           (student) => student.turn && student
         )[0];
 
@@ -116,10 +147,6 @@ io.on('connection', (socket) => {
           studentTurn,
         };
 
-        const rooms = Object.keys(socket.rooms);
-        for (let i = 1; i < rooms.length; i++) {
-          console.log(rooms);
-        }
         io.sockets.in(workgroup).emit('studentTurnTimer', data);
 
         console.log({
@@ -132,7 +159,7 @@ io.on('connection', (socket) => {
           studentTurn,
         });
       }
-    }, 1000);
+    }, 500);
 
     countDowns.push({ id: workgroup, countdown });
   });
