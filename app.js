@@ -45,9 +45,10 @@ io.on('connection', (socket) => {
 
     if (remainingTime > 0) {
       countdown = setInterval(() => {
-        if (!hasStarted) return;
+        const sessionHasStarted = Date.now() >= startTime;
         const sessionHasEnded = remainingTime <= 0;
 
+        if (!sessionHasStarted) return;
         if (sessionHasEnded) {
           let found = countDowns.filter((c) => {
             return c.id === workgroup;
@@ -67,7 +68,7 @@ io.on('connection', (socket) => {
           minutes,
           duration,
         });
-      }, 500);
+      }, 200);
     }
   });
 
@@ -97,9 +98,12 @@ io.on('connection', (socket) => {
     let studentsCopy = [...students];
 
     let countdown = setInterval(() => {
+      const sessionHasStarted = Date.now() >= startTime;
       const remainingTime = endTime - Date.now();
       const sessionHasEnded = remainingTime <= 0;
       let duration = turnEndTime - Date.now();
+
+      if (!sessionHasStarted) return;
 
       if (sessionHasEnded) {
         let found = countDowns.filter((c) => {
@@ -159,7 +163,7 @@ io.on('connection', (socket) => {
           studentTurn,
         });
       }
-    }, 500);
+    }, 200);
 
     countDowns.push({ id: workgroup, countdown });
   });
