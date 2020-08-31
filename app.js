@@ -18,6 +18,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/', router);
 
 let countDowns = [];
+const worksheets = []
+/*
+id: 
+canvas: 
+image_url
+*/
 
 io.on('connection', (socket) => {
   console.log('a user connected');
@@ -169,15 +175,43 @@ io.on('connection', (socket) => {
     countDowns.push({ id: workgroup, countdown });
   });
 
-  socket.on('getGroups', function (to) {
-    console.log('masuk g?');
+  socket.on("get_worksheet", function (payload) {
+    // payload: id, email, canvas, image_url
+    // console.log(worksheets[0])
+    const findIndexworksheet = worksheets.findIndex(worksheet => worksheet.id === payload.id)
+    // console.log(worksheets[findIndexworksheet], "???????????")
+    if (findIndexworksheet >= 0) {
+      socket.emit(`get_worksheet_${payload.email}`, worksheets[findIndexworksheet])
+    } else {
+      const worksheet = {
+        id: payload.id,
+        canvas: payload.canvas,
+        image_url: payload.image_url
+      }
+      worksheets.push(worksheet)
+
+      socket.emit(`get_worksheet_${payload.email}`, worksheet)
+    }
+  })
+
+  socket.on("getGroups", function (to) {
+    console.log("masuk g?");
     // io.emit("realtime-groups", db.groups);
     io.emit(to, db.groups);
   });
 
-  socket.on('update_answer', function (answer) {
-    console.log(socket.rooms);
-    socket.to(answer.group).emit('update_answer', answer);
+
+  socket.on("update_answer", function (answer) {
+    // console.log(socket.rooms)
+    socket.to(answer.group).emit("update_answer", answer);
+
+    const findIndexworksheet = worksheets.findIndex(worksheet => worksheet.id === answer.id)
+    // console.log(answer.canvas)
+    worksheets[findIndexworksheet] = {
+      id: answer.id,
+      canvas: answer.canvas,
+      image_url: answer.image_url
+    }
     // Worksheet.updateWorksheet(answer.id, {
     //   image_url: "",
     //   canvas: answer.canvas
