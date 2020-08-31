@@ -9,7 +9,6 @@ const io = require('socket.io')(http);
 const cors = require('cors');
 const router = require('./routes');
 const Worksheet = require('./helpers/Worksheet');
-const e = require('express');
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
@@ -24,7 +23,6 @@ io.on('connection', (socket) => {
   console.log('a user connected');
 
   socket.on('joinRoom', function (room) {
-    console.log(room);
     const rooms = Object.keys(socket.rooms);
     for (let i = 1; i < rooms.length; i++) {
       socket.leave(rooms[i]);
@@ -129,9 +127,7 @@ io.on('connection', (socket) => {
           }
         });
 
-        console.log(studentsCopy);
         studentsCopy[0].turn = true;
-        console.log(studentsCopy);
 
         return;
       }
