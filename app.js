@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/', router);
 
-const countDowns = [];
+let countDowns = [];
 
 io.on('connection', (socket) => {
   console.log('a user connected');
@@ -107,13 +107,14 @@ io.on('connection', (socket) => {
 
       if (sessionHasEnded) {
         let found = countDowns.filter((c) => {
-          console.log(c, workgroup);
           return c.id === workgroup;
         });
 
         if (found[0]) {
-          console.log('clearing');
           clearInterval(found[0].countdown);
+          countDowns = countDowns.filter((c) => {
+            return c.id !== workgroup;
+          });
         }
       }
 
@@ -124,12 +125,14 @@ io.on('connection', (socket) => {
 
         studentsCopy = studentsCopy.filter((student, idx) => {
           if (!student.turn && student.user.id !== user.id) {
-            if (idx === 1) {
-              student.turn = true;
-            }
             return student;
           }
         });
+
+        console.log(studentsCopy);
+        studentsCopy[0].turn = true;
+        console.log(studentsCopy);
+
         return;
       }
 
@@ -153,15 +156,15 @@ io.on('connection', (socket) => {
 
         io.sockets.in(workgroup).emit('studentTurnTimer', data);
 
-        console.log({
-          duration,
-          minutes,
-          seconds: seconds < 10 ? '0' + seconds : seconds,
-          completedTurn: duration < 0,
-          remainingTime: remainingTime,
-          currentTurn: currentTurnCopy,
-          studentTurn,
-        });
+        // console.log({
+        //   duration,
+        //   minutes,
+        //   seconds: seconds < 10 ? '0' + seconds : seconds,
+        //   completedTurn: duration < 0,
+        //   remainingTime: remainingTime,
+        //   currentTurn: currentTurnCopy,
+        //   studentTurn,
+        // });
       }
     }, 200);
 
