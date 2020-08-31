@@ -127,7 +127,9 @@ io.on('connection', (socket) => {
           }
         });
 
-        studentsCopy[0].turn = true;
+        if (studentsCopy.length) {
+          studentsCopy[0].turn = true;
+        }
 
         return;
       }
