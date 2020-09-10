@@ -219,9 +219,13 @@ io.on('connection', (socket) => {
   });
 
   socket.on('start_workgroup', function (workgroup) {
-    console.log('aaaaaaa');
+    // console.log('aaaaaaa');
     socket.to(workgroup.room).emit('start_workgroup', workgroup.id);
   });
+
+  socket.on("raise_hand", function (payload) { // { room, name }
+    socket.to(payload.room).emit('raise_hand', payload.name);
+  })
 });
 
 http.listen(PORT, () => {
