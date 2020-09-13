@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/', router);
 
 let countDowns = [];
-const worksheets = []
+const worksheets = [];
 /*
 id: 
 canvas: 
@@ -29,10 +29,10 @@ io.on('connection', (socket) => {
   console.log('a user connected');
 
   socket.on('joinRoom', function (room) {
-    const rooms = Object.keys(socket.rooms);
-    for (let i = 1; i < rooms.length; i++) {
-      socket.leave(rooms[i]);
-    }
+    // const rooms = Object.keys(socket.rooms);
+    // for (let i = 1; i < rooms.length; i++) {
+    //   socket.leave(rooms[i]);
+    // }
 
     socket.join(room);
   });
@@ -175,43 +175,49 @@ io.on('connection', (socket) => {
     countDowns.push({ id: workgroup, countdown });
   });
 
-  socket.on("get_worksheet", function (payload) {
+  socket.on('get_worksheet', function (payload) {
     // payload: id, email, canvas, image_url
     // console.log(worksheets[0])
-    const findIndexworksheet = worksheets.findIndex(worksheet => worksheet.id === payload.id)
+    const findIndexworksheet = worksheets.findIndex(
+      (worksheet) => worksheet.id === payload.id
+    );
     // console.log(worksheets[findIndexworksheet], "???????????")
     if (findIndexworksheet >= 0) {
-      socket.emit(`get_worksheet_${payload.email}`, worksheets[findIndexworksheet])
+      socket.emit(
+        `get_worksheet_${payload.email}`,
+        worksheets[findIndexworksheet]
+      );
     } else {
       const worksheet = {
         id: payload.id,
         canvas: payload.canvas,
-        image_url: payload.image_url
-      }
-      worksheets.push(worksheet)
+        image_url: payload.image_url,
+      };
+      worksheets.push(worksheet);
 
-      socket.emit(`get_worksheet_${payload.email}`, worksheet)
+      socket.emit(`get_worksheet_${payload.email}`, worksheet);
     }
-  })
+  });
 
-  socket.on("getGroups", function (to) {
-    console.log("masuk g?");
+  socket.on('getGroups', function (to) {
+    console.log('masuk g?');
     // io.emit("realtime-groups", db.groups);
     io.emit(to, db.groups);
   });
 
-
-  socket.on("update_answer", function (answer) {
+  socket.on('update_answer', function (answer) {
     // console.log(socket.rooms)
-    socket.to(answer.group).emit("update_answer", answer);
+    socket.to(answer.group).emit('update_answer', answer);
 
-    const findIndexworksheet = worksheets.findIndex(worksheet => worksheet.id === answer.id)
+    const findIndexworksheet = worksheets.findIndex(
+      (worksheet) => worksheet.id === answer.id
+    );
     // console.log(answer.canvas)
     worksheets[findIndexworksheet] = {
       id: answer.id,
       canvas: answer.canvas,
-      image_url: answer.image_url
-    }
+      image_url: answer.image_url,
+    };
     // Worksheet.updateWorksheet(answer.id, {
     //   image_url: "",
     //   canvas: answer.canvas
@@ -223,9 +229,10 @@ io.on('connection', (socket) => {
     socket.to(workgroup.room).emit('start_workgroup', workgroup.id);
   });
 
-  socket.on("raise_hand", function (payload) { // { room, name }
+  socket.on('raise_hand', function (payload) {
+    // { room, name }
     socket.to(payload.room).emit('raise_hand', payload.name);
-  })
+  });
 });
 
 http.listen(PORT, () => {
