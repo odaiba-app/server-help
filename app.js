@@ -30,12 +30,17 @@ io.on('connection', (socket) => {
   console.log('a user connected');
 
   socket.on('joinRoom', function (room) {
-    const rooms = Object.keys(socket.rooms);
-    for (let i = 1; i < rooms.length; i++) {
-      socket.leave(rooms[i]);
-    }
+    // const rooms = Object.keys(socket.rooms);
+    // for (let i = 1; i < rooms.length; i++) {
+    //   console.log(rooms[i]);
+    //   socket.leave(rooms[i]);
+    // }
 
     socket.join(room);
+  });
+
+  socket.on('leaveRoom', function (room) {
+    socket.leave(room);
   });
 
   socket.on('startSessionTimer', function (data) {
@@ -116,7 +121,6 @@ io.on('connection', (socket) => {
         });
 
         if (found[0]) {
-          clearInterval(found[0].countdown);
           countDowns = countDowns.filter((c) => {
             return c.id !== workgroup;
           });
@@ -223,7 +227,8 @@ io.on('connection', (socket) => {
     };
 
     const allTeacherWorksheets = worksheets.filter(
-      (worksheet) => worksheet.teacher.id === answer.teacher.id
+      (worksheet) =>
+        worksheet.teacher && worksheet.teacher.id === answer.teacher.id
     );
 
     io.sockets
