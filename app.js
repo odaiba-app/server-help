@@ -8,6 +8,7 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const cors = require('cors');
 const router = require('./routes');
+const { isObject } = require('util');
 // const Worksheet = require('./helpers/Worksheet');
 const PORT = process.env.PORT || 3001;
 
@@ -31,10 +32,15 @@ io.on('connection', (socket) => {
   socket.on('joinRoom', function (room) {
     // const rooms = Object.keys(socket.rooms);
     // for (let i = 1; i < rooms.length; i++) {
+    //   console.log(rooms[i]);
     //   socket.leave(rooms[i]);
     // }
 
     socket.join(room);
+  });
+
+  socket.on('leaveRoom', function (room) {
+    socket.leave(room);
   });
 
   socket.on('startSessionTimer', function (data) {
@@ -115,7 +121,6 @@ io.on('connection', (socket) => {
         });
 
         if (found[0]) {
-          clearInterval(found[0].countdown);
           countDowns = countDowns.filter((c) => {
             return c.id !== workgroup;
           });
@@ -206,18 +211,30 @@ io.on('connection', (socket) => {
   });
 
   socket.on('update_answer', function (answer) {
-    // console.log(socket.rooms)
+    if (!answer.hasStarted && Date.now() > answer.endTime) return;
+
     socket.to(answer.group).emit('update_answer', answer);
 
     const findIndexworksheet = worksheets.findIndex(
       (worksheet) => worksheet.id === answer.id
     );
-    // console.log(answer.canvas)
+
     worksheets[findIndexworksheet] = {
+      ...answer,
       id: answer.id,
       canvas: answer.canvas,
       image_url: answer.image_url,
     };
+
+    const allTeacherWorksheets = worksheets.filter(
+      (worksheet) =>
+        worksheet.teacher && worksheet.teacher.id === answer.teacher.id
+    );
+
+    io.sockets
+      .in(`teacher-workgroups-${answer.teacher.id}`)
+      .emit('teacher-worksheets', allTeacherWorksheets);
+
     // Worksheet.updateWorksheet(answer.id, {
     //   image_url: "",
     //   canvas: answer.canvas
