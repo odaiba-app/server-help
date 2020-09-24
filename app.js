@@ -250,6 +250,16 @@ io.on('connection', (socket) => {
     // { room, name }
     socket.to(payload.room).emit('raise_hand', payload.name);
   });
+
+  socket.on('send_worksheets', function (id) {
+    const allTeacherWorksheets = worksheets.filter(
+      (worksheet) => worksheet.teacher && worksheet.teacher.id === id
+    );
+
+    io.sockets
+      .in(`teacher-workgroups-${id}`)
+      .emit('teacher-worksheets', allTeacherWorksheets);
+  });
 });
 
 http.listen(PORT, () => {
