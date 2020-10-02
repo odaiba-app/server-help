@@ -37,27 +37,30 @@ io.on('connection', (socket) => {
   });
 
   socket.on('startSessionTimer', (data) => {
-    const { startTime, endTime, workgroup, remainingTime, worksheetId } = data;
+    const { startTime, endTime, workgroup, worksheetId } = data;
+    const remainingTime = endTime - Date.now();
 
     let countdown;
 
     if (remainingTime > 0) {
       countdown = setInterval(() => {
         const sessionHasStarted = Date.now() >= startTime;
-        const sessionHasEnded = remainingTime <= 0;
+        const remainingTimeCurrent = endTime - Date.now();
+        const sessionHasEnded = remainingTimeCurrent <= 0;
 
         if (!sessionHasStarted) return;
         if (sessionHasEnded) {
-          const found = countDowns.filter((c) => c.id === workgroup);
-
-          if (found[0]) {
-            clearInterval(found[0].countdown);
-          }
-
           const foundWorksheet = worksheets.filter((worksheet) => worksheet.id === worksheetId);
 
           if (foundWorksheet[0]) {
             worksheets = worksheets.filter((worksheet) => worksheet.id !== worksheetId);
+          }
+          const found = countDowns.filter((c) => c.id === `session-timer-${workgroup}`);
+
+          if (found[0]) {
+            clearInterval(found[0].countdown);
+
+            countDowns = countDowns.filter((c) => c.id !== `session-timer-${workgroup}`);
           }
         }
 
@@ -72,7 +75,7 @@ io.on('connection', (socket) => {
         });
       }, 200);
 
-      countDowns.push(countdown);
+      countDowns.push({ id: `session-timer-${workgroup}`, countdown });
     }
   });
 
@@ -101,6 +104,8 @@ io.on('connection', (socket) => {
         const found = countDowns.filter((c) => c.id === workgroup);
 
         if (found[0]) {
+          clearInterval(found[0].countdown);
+
           countDowns = countDowns.filter((c) => c.id !== workgroup);
         }
       }
@@ -110,7 +115,7 @@ io.on('connection', (socket) => {
 
         currentTurnCopy += 1;
 
-        studentsCopy = studentsCopy.filter((student, idx) => {
+        studentsCopy = studentsCopy.filter((student) => {
           if (!student.turn && student.user.id !== user.id) {
             return student;
           }
@@ -140,16 +145,6 @@ io.on('connection', (socket) => {
         };
 
         io.sockets.in(workgroup).emit('studentTurnTimer', timerData);
-
-        // console.log({
-        //   duration,
-        //   minutes,
-        //   seconds: seconds < 10 ? '0' + seconds : seconds,
-        //   completedTurn: duration < 0,
-        //   remainingTime: remainingTime,
-        //   currentTurn: currentTurnCopy,
-        //   studentTurn,
-        // });
       }
     }, 200);
 
@@ -173,12 +168,6 @@ io.on('connection', (socket) => {
 
       socket.emit(`get_worksheet_${payload.email}`, worksheet);
     }
-  });
-
-  socket.on('getGroups', (to) => {
-    console.log('masuk g?');
-    // io.emit("realtime-groups", db.groups);
-    io.emit(to, db.groups);
   });
 
   socket.on('update_answer', (answer) => {
