@@ -1,15 +1,13 @@
-if (process.env.NODE_ENV == 'development') {
-  require('dotenv').config();
-}
+require('dotenv').config();
 
 const express = require('express');
+
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const cors = require('cors');
 const router = require('./routes');
-const { isObject } = require('util');
-// const Worksheet = require('./helpers/Worksheet');
+
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
@@ -19,17 +17,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/', router);
 
 let countDowns = [];
-const worksheets = [];
-/*
-id: 
-canvas: 
-image_url
-*/
+let worksheets = [];
 
 io.on('connection', (socket) => {
   console.log('a user connected');
 
-  socket.on('joinRoom', function (room) {
+  socket.on('joinRoom', (room) => {
     // const rooms = Object.keys(socket.rooms);
     // for (let i = 1; i < rooms.length; i++) {
     //   console.log(rooms[i]);
@@ -39,33 +32,35 @@ io.on('connection', (socket) => {
     socket.join(room);
   });
 
-  socket.on('leaveRoom', function (room) {
+  socket.on('leaveRoom', (room) => {
     socket.leave(room);
   });
 
-  socket.on('startSessionTimer', function (data) {
-    let {
-      hasStarted,
-      startTime,
-      endTime,
-      turn_time,
-      workgroup,
-      remainingTime,
-    } = data;
+  socket.on('startSessionTimer', (data) => {
+    const { startTime, endTime, workgroup, worksheetId } = data;
+    const remainingTime = endTime - Date.now();
+
+    let countdown;
 
     if (remainingTime > 0) {
       countdown = setInterval(() => {
         const sessionHasStarted = Date.now() >= startTime;
-        const sessionHasEnded = remainingTime <= 0;
+        const remainingTimeCurrent = endTime - Date.now();
+        const sessionHasEnded = remainingTimeCurrent <= 0;
 
         if (!sessionHasStarted) return;
         if (sessionHasEnded) {
-          let found = countDowns.filter((c) => {
-            return c.id === workgroup;
-          });
+          const foundWorksheet = worksheets.filter((worksheet) => worksheet.id === worksheetId);
+
+          if (foundWorksheet[0]) {
+            worksheets = worksheets.filter((worksheet) => worksheet.id !== worksheetId);
+          }
+          const found = countDowns.filter((c) => c.id === `session-timer-${workgroup}`);
 
           if (found[0]) {
             clearInterval(found[0].countdown);
+
+            countDowns = countDowns.filter((c) => c.id !== `session-timer-${workgroup}`);
           }
         }
 
@@ -74,30 +69,20 @@ io.on('connection', (socket) => {
         const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
 
         io.sockets.in(workgroup).emit('workgroupSessionTimer', {
-          seconds: seconds < 10 ? '0' + seconds : seconds,
+          seconds: seconds < 10 ? `0${seconds}` : seconds,
           minutes,
           duration,
         });
       }, 200);
+
+      countDowns.push({ id: `session-timer-${workgroup}`, countdown });
     }
   });
 
-  socket.on('startTurnTimer', function (data) {
-    let {
-      hasStarted,
-      startTime,
-      endTime,
-      turn_time,
-      workgroup,
-      remainingTime,
-      user,
-      students,
-      currentTurn,
-    } = data;
+  socket.on('startTurnTimer', (data) => {
+    const { startTime, endTime, turn_time, workgroup, user, students, currentTurn } = data;
 
-    const sessionWasCreated = countDowns.filter((c) => {
-      return c.id === workgroup;
-    });
+    const sessionWasCreated = countDowns.filter((c) => c.id === workgroup);
     const sessionHasFinished = Date.now() >= endTime;
 
     if (sessionHasFinished) return;
@@ -107,32 +92,30 @@ io.on('connection', (socket) => {
     let turnEndTime = startTime + turn_time;
     let studentsCopy = [...students];
 
-    let countdown = setInterval(() => {
+    const countdown = setInterval(() => {
       const sessionHasStarted = Date.now() >= startTime;
       const remainingTime = endTime - Date.now();
       const sessionHasEnded = remainingTime <= 0;
-      let duration = turnEndTime - Date.now();
+      const duration = turnEndTime - Date.now();
 
       if (!sessionHasStarted) return;
 
       if (sessionHasEnded) {
-        let found = countDowns.filter((c) => {
-          return c.id === workgroup;
-        });
+        const found = countDowns.filter((c) => c.id === workgroup);
 
         if (found[0]) {
-          countDowns = countDowns.filter((c) => {
-            return c.id !== workgroup;
-          });
+          clearInterval(found[0].countdown);
+
+          countDowns = countDowns.filter((c) => c.id !== workgroup);
         }
       }
 
       if (duration <= 0) {
-        turnEndTime = turnEndTime + turn_time;
+        turnEndTime += turn_time;
 
         currentTurnCopy += 1;
 
-        studentsCopy = studentsCopy.filter((student, idx) => {
+        studentsCopy = studentsCopy.filter((student) => {
           if (!student.turn && student.user.id !== user.id) {
             return student;
           }
@@ -149,49 +132,32 @@ io.on('connection', (socket) => {
       const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
 
       if (Date.now() < endTime) {
-        let studentTurn = studentsCopy.filter(
-          (student) => student.turn && student
-        )[0];
+        const studentTurn = studentsCopy.filter((student) => student.turn && student)[0];
 
-        const data = {
+        const timerData = {
           duration,
           minutes,
-          seconds: seconds < 10 ? '0' + seconds : seconds,
+          seconds: seconds < 10 ? `0${seconds}` : seconds,
           completedTurn: duration < 0,
-          remainingTime: remainingTime,
+          remainingTime,
           currentTurn: currentTurnCopy,
           studentTurn,
         };
 
-        io.sockets.in(workgroup).emit('studentTurnTimer', data);
-
-        // console.log({
-        //   duration,
-        //   minutes,
-        //   seconds: seconds < 10 ? '0' + seconds : seconds,
-        //   completedTurn: duration < 0,
-        //   remainingTime: remainingTime,
-        //   currentTurn: currentTurnCopy,
-        //   studentTurn,
-        // });
+        io.sockets.in(workgroup).emit('studentTurnTimer', timerData);
       }
     }, 200);
 
     countDowns.push({ id: workgroup, countdown });
   });
 
-  socket.on('get_worksheet', function (payload) {
+  socket.on('get_worksheet', (payload) => {
     // payload: id, email, canvas, image_url
     // console.log(worksheets[0])
-    const findIndexworksheet = worksheets.findIndex(
-      (worksheet) => worksheet.id === payload.id
-    );
+    const findIndexworksheet = worksheets.findIndex((worksheet) => worksheet.id === payload.id);
     // console.log(worksheets[findIndexworksheet], "???????????")
     if (findIndexworksheet >= 0) {
-      socket.emit(
-        `get_worksheet_${payload.email}`,
-        worksheets[findIndexworksheet]
-      );
+      socket.emit(`get_worksheet_${payload.email}`, worksheets[findIndexworksheet]);
     } else {
       const worksheet = {
         id: payload.id,
@@ -204,20 +170,12 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('getGroups', function (to) {
-    console.log('masuk g?');
-    // io.emit("realtime-groups", db.groups);
-    io.emit(to, db.groups);
-  });
-
-  socket.on('update_answer', function (answer) {
+  socket.on('update_answer', (answer) => {
     if (!answer.hasStarted && Date.now() > answer.endTime) return;
 
     socket.to(answer.group).emit('update_answer', answer);
 
-    const findIndexworksheet = worksheets.findIndex(
-      (worksheet) => worksheet.id === answer.id
-    );
+    const findIndexworksheet = worksheets.findIndex((worksheet) => worksheet.id === answer.id);
 
     worksheets[findIndexworksheet] = {
       ...answer,
@@ -227,8 +185,7 @@ io.on('connection', (socket) => {
     };
 
     const allTeacherWorksheets = worksheets.filter(
-      (worksheet) =>
-        worksheet.teacher && worksheet.teacher.id === answer.teacher.id
+      (worksheet) => worksheet.teacher && worksheet.teacher.id === answer.teacher.id,
     );
 
     io.sockets
@@ -241,24 +198,22 @@ io.on('connection', (socket) => {
     // })
   });
 
-  socket.on('start_workgroup', function (workgroup) {
+  socket.on('start_workgroup', (workgroup) => {
     // console.log('aaaaaaa');
     socket.to(workgroup.room).emit('start_workgroup', workgroup.id);
   });
 
-  socket.on('raise_hand', function (payload) {
+  socket.on('raise_hand', (payload) => {
     // { room, name }
     socket.to(payload.room).emit('raise_hand', payload.name);
   });
 
-  socket.on('send_worksheets', function (id) {
+  socket.on('send_worksheets', (id) => {
     const allTeacherWorksheets = worksheets.filter(
-      (worksheet) => worksheet.teacher && worksheet.teacher.id === id
+      (worksheet) => worksheet.teacher && worksheet.teacher.id === id,
     );
 
-    io.sockets
-      .in(`teacher-workgroups-${id}`)
-      .emit('teacher-worksheets', allTeacherWorksheets);
+    io.sockets.in(`teacher-workgroups-${id}`).emit('teacher-worksheets', allTeacherWorksheets);
   });
 });
 
