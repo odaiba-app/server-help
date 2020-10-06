@@ -55,6 +55,7 @@ io.on('connection', (socket) => {
           if (foundWorksheet[0]) {
             worksheets = worksheets.filter((worksheet) => worksheet.id !== worksheetId);
           }
+
           const found = countDowns.filter((c) => c.id === `session-timer-${workgroup}`);
 
           if (found[0]) {
@@ -102,6 +103,8 @@ io.on('connection', (socket) => {
 
       if (sessionHasEnded) {
         const found = countDowns.filter((c) => c.id === workgroup);
+
+        io.sockets.in(workgroup).emit('studentTurnTimer', { ...data, completed: true });
 
         if (found[0]) {
           clearInterval(found[0].countdown);
