@@ -218,6 +218,24 @@ io.on('connection', (socket) => {
 
     io.sockets.in(`teacher-workgroups-${id}`).emit('teacher-worksheets', allTeacherWorksheets);
   });
+
+  socket.on('worksheetConfirmation', (data) => {
+    const {
+      groupId,
+      classroomId,
+      submission: { half, students },
+    } = data;
+
+    const dataCopy = { ...data };
+
+    if (half === students.length) {
+      dataCopy.allConfirmed = true;
+    }
+
+    console.log(dataCopy);
+
+    socket.to(`classroom-${classroomId}-workgroup-${groupId}`).emit('hayThere', dataCopy);
+  });
 });
 
 http.listen(PORT, () => {
