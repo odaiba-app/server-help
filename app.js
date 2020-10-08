@@ -218,6 +218,30 @@ io.on('connection', (socket) => {
 
     io.sockets.in(`teacher-workgroups-${id}`).emit('teacher-worksheets', allTeacherWorksheets);
   });
+
+  socket.on('worksheetConfirmation', (data) => {
+    const {
+      groupId,
+      classroomId,
+      submission: { half, students, confirmedBy },
+    } = data;
+
+    const submissionCopy = { ...data.submission };
+
+    if (half >= students.length) {
+      submissionCopy.allConfirmed = true;
+    }
+
+    if (!submissionCopy.allConfirmed) {
+      socket
+        .to(`classroom-${classroomId}-workgroup-${groupId}`)
+        .emit('alertSubmitted', confirmedBy);
+    }
+
+    io.sockets
+      .in(`classroom-${classroomId}-workgroup-${groupId}`)
+      .emit('submissionData', submissionCopy);
+  });
 });
 
 http.listen(PORT, () => {
