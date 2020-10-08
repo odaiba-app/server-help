@@ -223,13 +223,19 @@ io.on('connection', (socket) => {
     const {
       groupId,
       classroomId,
-      submission: { half, students },
+      submission: { half, students, confirmedBy },
     } = data;
 
     const submissionCopy = { ...data.submission };
 
     if (half >= students.length) {
       submissionCopy.allConfirmed = true;
+    }
+
+    if (!submissionCopy.allConfirmed) {
+      socket
+        .to(`classroom-${classroomId}-workgroup-${groupId}`)
+        .emit('alertSubmitted', confirmedBy);
     }
 
     io.sockets
