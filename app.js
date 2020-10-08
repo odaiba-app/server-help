@@ -226,15 +226,15 @@ io.on('connection', (socket) => {
       submission: { half, students },
     } = data;
 
-    const dataCopy = { ...data };
+    const submissionCopy = { ...data.submission };
 
-    if (half === students.length) {
-      dataCopy.allConfirmed = true;
+    if (half >= students.length) {
+      submissionCopy.allConfirmed = true;
     }
 
-    console.log(dataCopy);
-
-    socket.to(`classroom-${classroomId}-workgroup-${groupId}`).emit('hayThere', dataCopy);
+    io.sockets
+      .in(`classroom-${classroomId}-workgroup-${groupId}`)
+      .emit('submissionData', submissionCopy);
   });
 });
 
