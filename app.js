@@ -223,6 +223,7 @@ io.on('connection', (socket) => {
     const {
       groupId,
       classroomId,
+      worksheetId,
       submission: { half, students, confirmedBy },
     } = data;
 
@@ -232,15 +233,26 @@ io.on('connection', (socket) => {
       submissionCopy.allConfirmed = true;
     }
 
+    worksheets.forEach((w) => console.log(w.id));
+
     if (!submissionCopy.allConfirmed) {
       socket
         .to(`classroom-${classroomId}-workgroup-${groupId}`)
         .emit('alertSubmitted', confirmedBy);
-    }
+    } else if (submissionCopy.allConfirmed) {
+      const myWorksheet = worksheets.filter(
+        (worksheet) => worksheet.id && worksheet.id === worksheetId,
+      );
 
-    io.sockets
-      .in(`classroom-${classroomId}-workgroup-${groupId}`)
-      .emit('submissionData', submissionCopy);
+      if (myWorksheet.length) {
+        io.sockets.in(`classroom-${classroomId}-workgroup-${groupId}`).emit('submissionData', {
+          allConfirmed: submissionCopy.allConfirmed,
+          worksheetId,
+          canvas: myWorksheet[0].canvas,
+          image_url: myWorksheet[0].image_url,
+        });
+      }
+    }
   });
 });
 
