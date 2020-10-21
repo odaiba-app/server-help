@@ -36,19 +36,42 @@ io.on('connection', (socket) => {
     socket.leave(room);
   });
 
+  socket.on('endSession', (data) => {
+    const foundWorksheet = worksheets.filter((worksheet) => worksheet.id === data.worksheetId);
+
+    if (foundWorksheet[0]) {
+      worksheets = worksheets.filter((worksheet) => worksheet.id !== data.worksheetId);
+    }
+
+    const foundSessionTimer = countDowns.filter((c) => c.id === `session-timer-${data.workgroup}`);
+    const foundTurnTimer = countDowns.filter((c) => c.id === data.workgroup);
+
+    if (foundSessionTimer[0]) {
+      clearInterval(foundSessionTimer[0].countdown);
+
+      countDowns = countDowns.filter((c) => c.id !== `session-timer-${data.workgroup}`);
+    }
+
+    if (foundTurnTimer[0]) {
+      clearInterval(foundTurnTimer[0].countdown);
+
+      countDowns = countDowns.filter((c) => c.id !== data.workgroup);
+    }
+
+    io.sockets.in(data.workgroup).emit('studentTurnTimer', { ...data, completed: true });
+  });
+
   socket.on('startSessionTimer', (data) => {
-    const { startTime, endTime, workgroup, worksheetId } = data;
+    const { endTime, workgroup, worksheetId } = data;
     const remainingTime = endTime - Date.now();
 
     let countdown;
 
     if (remainingTime > 0) {
       countdown = setInterval(() => {
-        const sessionHasStarted = Date.now() >= startTime;
         const remainingTimeCurrent = endTime - Date.now();
         const sessionHasEnded = remainingTimeCurrent <= 0;
 
-        if (!sessionHasStarted) return;
         if (sessionHasEnded) {
           const foundWorksheet = worksheets.filter((worksheet) => worksheet.id === worksheetId);
 
@@ -174,8 +197,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on('update_answer', (answer) => {
-    if (!answer.hasStarted && Date.now() > answer.endTime) return;
-
     socket.to(answer.group).emit('update_answer', answer);
 
     const findIndexworksheet = worksheets.findIndex((worksheet) => worksheet.id === answer.id);
