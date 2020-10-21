@@ -197,8 +197,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on('update_answer', (answer) => {
-    if (!answer.hasStarted && Date.now() > answer.endTime) return;
-
     socket.to(answer.group).emit('update_answer', answer);
 
     const findIndexworksheet = worksheets.findIndex((worksheet) => worksheet.id === answer.id);
