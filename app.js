@@ -104,74 +104,68 @@ io.on('connection', (socket) => {
   });
 
   socket.on('startTurnTimer', (data) => {
-    const { startTime, endTime, turn_time, workgroup, user, students, currentTurn } = data;
+    const { startTime, turn_time, workgroup, user, students } = data;
 
     const sessionWasCreated = countDowns.filter((c) => c.id === workgroup);
-    const sessionHasFinished = Date.now() >= endTime;
 
-    if (sessionHasFinished) return;
     if (sessionWasCreated.length) return;
 
-    let currentTurnCopy = currentTurn;
     let turnEndTime = startTime + turn_time;
     let studentsCopy = [...students];
+    let numOfTurnsComplete = 0;
 
     const countdown = setInterval(() => {
-      const sessionHasStarted = Date.now() >= startTime;
-      const remainingTime = endTime - Date.now();
-      const sessionHasEnded = remainingTime <= 0;
       const duration = turnEndTime - Date.now();
 
-      if (!sessionHasStarted) return;
-
-      if (sessionHasEnded) {
-        const found = countDowns.filter((c) => c.id === workgroup);
-
-        io.sockets.in(workgroup).emit('studentTurnTimer', { ...data, completed: true });
-
-        if (found[0]) {
-          clearInterval(found[0].countdown);
-
-          countDowns = countDowns.filter((c) => c.id !== workgroup);
-        }
-      }
-
       if (duration <= 0) {
+        numOfTurnsComplete += 1;
+
         turnEndTime += turn_time;
 
-        currentTurnCopy += 1;
+        const numOfStudents = students.length;
 
-        studentsCopy = studentsCopy.filter((student) => {
-          if (!student.turn && student.user.id !== user.id) {
-            return student;
+        if (numOfStudents === numOfTurnsComplete) {
+          numOfTurnsComplete = 0;
+
+          studentsCopy = [...students].map((student, idx) => {
+            const studentCopy = { ...student };
+
+            if (idx === numOfStudents - 1) {
+              studentCopy.turn = true;
+            } else {
+              studentCopy.turn = false;
+            }
+
+            return studentCopy;
+          });
+        } else {
+          studentsCopy = studentsCopy.filter((student) => {
+            if (!student.turn && student.user.id !== user.id) {
+              return student;
+            }
+          });
+
+          if (studentsCopy.length) {
+            studentsCopy[0].turn = true;
           }
-        });
-
-        if (studentsCopy.length) {
-          studentsCopy[0].turn = true;
         }
 
         return;
       }
-
       const seconds = Math.floor((duration % (1000 * 60)) / 1000);
       const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
 
-      if (Date.now() < endTime) {
-        const studentTurn = studentsCopy.filter((student) => student.turn && student)[0];
+      const studentTurn = studentsCopy.filter((student) => student.turn && student)[0];
 
-        const timerData = {
-          duration,
-          minutes,
-          seconds: seconds < 10 ? `0${seconds}` : seconds,
-          completedTurn: duration < 0,
-          remainingTime,
-          currentTurn: currentTurnCopy,
-          studentTurn,
-        };
+      const timerData = {
+        duration,
+        minutes,
+        seconds: seconds < 10 ? `0${seconds}` : seconds,
+        completedTurn: duration < 0,
+        studentTurn,
+      };
 
-        io.sockets.in(workgroup).emit('studentTurnTimer', timerData);
-      }
+      io.sockets.in(workgroup).emit('studentTurnTimer', timerData);
     }, 200);
 
     countDowns.push({ id: workgroup, countdown });
@@ -250,7 +244,7 @@ io.on('connection', (socket) => {
 
     const submissionCopy = { ...data.submission };
 
-    if (half >= students.length) {
+    if (Math.ceil(half) >= students.length) {
       submissionCopy.allConfirmed = true;
     }
 
