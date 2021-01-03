@@ -130,7 +130,8 @@ io.on('connection', (socket) => {
           studentsCopy = [...students].map((student, idx) => {
             const studentCopy = { ...student };
 
-            if (idx === numOfStudents - 1) {
+            // if (idx === numOfStudents - 1) {
+            if (idx === 0) {
               studentCopy.turn = true;
             } else {
               studentCopy.turn = false;
