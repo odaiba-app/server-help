@@ -235,6 +235,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('worksheetConfirmation', (data) => {
+    console.log(socket.rooms)
     const {
       groupId,
       classroomId,
@@ -249,18 +250,19 @@ io.on('connection', (socket) => {
     }
 
     worksheets.forEach((w) => console.log(w.id));
-
+    const room = `classroom-${classroomId}-workgroup-${groupId}` // classroom-1-workgroup-50
     if (!submissionCopy.allConfirmed) {
       socket
-        .to(`classroom-${classroomId}-workgroup-${groupId}`)
+        .to(room)
         .emit('alertSubmitted', confirmedBy);
     } else if (submissionCopy.allConfirmed) {
       const myWorksheet = worksheets.filter(
         (worksheet) => worksheet.id && worksheet.id === worksheetId,
       );
 
+      console.log(data)
       if (myWorksheet.length) {
-        io.sockets.in(`classroom-${classroomId}-workgroup-${groupId}`).emit('submissionData', {
+        io.sockets.in(room).emit('submissionData', {
           allConfirmed: submissionCopy.allConfirmed,
           worksheetId,
           canvas: myWorksheet[0].canvas,
