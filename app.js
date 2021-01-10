@@ -234,6 +234,16 @@ io.on('connection', (socket) => {
     io.sockets.in(`teacher-workgroups-${id}`).emit('teacher-worksheets', allTeacherWorksheets);
   });
 
+  socket.on("broadcastWorksheetConfirmed", (data) => {
+    const {
+      groupId,
+      classroomId,
+      worksheet
+    } = data
+    const room = `classroom-${classroomId}-workgroup-${groupId}`
+    socket.to(room).emit("handleWorksheetConfirmed", worksheet)
+  })
+
   socket.on('worksheetConfirmation', (data) => {
     console.log(socket.rooms)
     const {
